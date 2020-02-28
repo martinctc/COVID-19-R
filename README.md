@@ -12,5 +12,5 @@ Other useful dashboards (by others) on COVID-19 can be found below:
 - [Coronavirus App](https://coronavirus.app/)
 
 ## Share this
-- [Link to this dashboard](https://rawcdn.githack.com/martinctc/COVID-19-R/a00ced35da6429f778668b9c99fcc830cdfe1793/Script/covvirus_analysis_20200224.html)
+- [Link to this dashboard](https://raw.githack.com/martinctc/COVID-19-R/master/Script/covvirus_analysis_20200224.html)
 - [Link to the GitHub repo](https://github.com/martinctc/COVID-19-R)
