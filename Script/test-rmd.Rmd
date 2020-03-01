@@ -3,7 +3,6 @@ title: "Minimal COVID-19 dashboard"
 author: "Martin Chan"
 output: 
   flexdashboard::flex_dashboard:
-    theme: cosmo
     orientation: columns
     vertical_layout: fill
 ---
@@ -13,10 +12,16 @@ output:
   background-color:#363636;
   
 }
-</style>   
-  
+</style>
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+#### Load packages ####
+library(tidyverse)
+library(flexdashboard)
+library(dygraphs)
+library(timetk)
+library(here)
 ```
 
 Dashboard
@@ -26,13 +31,6 @@ Column {data-width=300}
 -----------------------------------------------------------------------
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}  
-#### Load packages ####
-library(tidyverse)
-library(flexdashboard)
-library(dygraphs)
-library(timetk)
-library(here)
-
 #### Load functions ####
 source(here("Script", "Functions", "create_dt.R"))
 source(here("Script", "Functions", "rgb2hex.R"))
@@ -102,7 +100,6 @@ n_recovered %>%
            color = rgb2hex(11,71,6))
 ```
 
-
 ### Fatality Rate
 
 <!-- Calculated as a % of deaths over _total deaths_ plus _total recovered_. -->
@@ -166,6 +163,9 @@ output_data %>%
 output_data %>%
   arrange(Date) %>%
   knitr::kable()
+  
   # create_dt() %>%
   # DT::formatPercentage(c("FatalityRate"), 1)
 ```
+
+
