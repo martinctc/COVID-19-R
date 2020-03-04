@@ -27,7 +27,7 @@ library(here)
 Dashboard
 =====================================
 
-Column {data-width=300}
+Column {data-width=150}
 -----------------------------------------------------------------------
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}  
@@ -58,8 +58,10 @@ list(summary_confirmed,
   reduce(full_join, by = "Date") %>%
   mutate(N_Outcome = Deaths + Recovered) %>%
   mutate(FatalityRate = Deaths / N_Outcome) %>%
-  mutate_at(vars(Date), ~lubridate::mdy(.)) -> output_data
+  mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+  arrange(Date) -> output_data
 ```
+
 
 ### Total Global Confirms
 
@@ -86,6 +88,22 @@ n_deaths %>%
            icon = "fa-sort-up",
            color = rgb2hex(77,69,48))
 ```
+
+### Today
+
+```{r echo=FALSE}
+summary_confirmed %>%
+  pull(Date) %>%
+  max() %>%
+  lubridate::dmy() %>%
+  format("%B %d") %>%
+  valueBox(caption = "Today's Date",
+           icon = "fa-sort-up",
+           color = rgb2hex(180,180,0))
+```
+
+Column {data-width=150}
+-----------------------------------------------------------------------
 
 ### Total Global Recovered
 
@@ -118,6 +136,18 @@ n_fr %>%
            color = rgb2hex(227,166,0))
 ```
 
+### New cases today
+
+```{r echo=FALSE}
+output_data %>%
+  mutate(Confirm_Lag = Confirms - lag(Confirms, 1)) %>%
+  arrange(desc(Date)) %>%
+  slice(1) %>%
+  pull(Confirm_Lag) %>%
+  valueBox(caption = "New confirms",
+           icon = "fa-sort-up",
+           color = rgb2hex(227,200,0))
+```
 
 Column {data-width=500} {.tabset}
 -----------------------------------------------------------------------
@@ -135,6 +165,28 @@ output_data %>%
   dyAxis("y2", label = "Number of Confirmed Cases with Outcomes", independentTicks = TRUE) %>%
   dyAxis("x", label = "Date") %>%
   dySeries("N_Outcome", axis = "y2") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```
+
+### New vs Total Confirms
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(Date) %>%
+  mutate(New_cases = Confirms - lag(Confirms, 1)) %>%
+  drop_na(New_cases) %>%
+  timetk::tk_xts(select = c(Confirms, New_cases),
+                 date_var = Date) %>%
+  dygraph(main = "New vs Total Cases") %>%
+  dyAxis("y", label = "Cumulative confirms") %>%
+  dyAxis("y2", label = "New cases per day", independentTicks = TRUE) %>%
+  dyAxis("x", label = "Date") %>%
+  dySeries("New_cases", axis = "y2") %>%
   dyRangeSelector() %>%
   dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
             drawGrid = FALSE, fillGraph = TRUE) %>%
