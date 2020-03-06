@@ -58,6 +58,7 @@ list(summary_confirmed,
   reduce(full_join, by = "Date") %>%
   mutate(N_Outcome = Deaths + Recovered) %>%
   mutate(FatalityRate = Deaths / N_Outcome) %>%
+  mutate(GrossFatalityRate = Deaths / Confirms) %>%
   mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
   arrange(Date) -> output_data
 ```
@@ -89,6 +90,23 @@ n_deaths %>%
            color = rgb2hex(77,69,48))
 ```
 
+### Gross Fatality Rate
+
+<!-- Calculated as a % of deaths over confirmed. -->
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(desc(Date)) %>%
+  slice(1) %>%
+  pull(GrossFatalityRate) -> n_gfr
+
+n_gfr %>%
+  surveytoolbox::as_percent() %>%
+  valueBox(caption = "Gross Fatality rate",
+           icon = "fa-sort-up",
+           color = rgb2hex(230,82,2))
+```
+
 ### Today
 
 ```{r echo=FALSE}
@@ -118,8 +136,21 @@ n_recovered %>%
            color = rgb2hex(11,71,6))
 ```
 
+### Total Cases with Confirmed Outcomes
 
-### Fatality Rate
+```{r echo=FALSE}
+ 
+
+n_recovered %>%
+  c(n_deaths) %>%
+  sum() %>%
+  valueBox(caption = "Total Deaths + Recovered",
+           icon = "fa-sort-up",
+           color = rgb2hex(168,50,104))
+```
+
+
+### Net Fatality Rate
 
 <!-- Calculated as a % of deaths over _total deaths_ plus _total recovered_. -->
 
@@ -131,7 +162,7 @@ output_data %>%
 
 n_fr %>%
   surveytoolbox::as_percent() %>%
-  valueBox(caption = "Fatality rate",
+  valueBox(caption = "Net Fatality rate",
            icon = "fa-sort-up",
            color = rgb2hex(227,166,0))
 ```
