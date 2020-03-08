@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #### Load packages ####
 library(tidyverse)
 library(flexdashboard)
+library(surveytoolbox)
 library(dygraphs)
 library(timetk)
 library(here)
@@ -40,12 +41,30 @@ df_confirmed <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID
 df_deaths <- read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv")
 df_recovered <- read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv")
 
-run_summary <- function(data, varname){
-  data %>%
-    select(-`Province/State`, -`Country/Region`, -Lat, -Long) %>%
-    gather(Date, !!sym(varname)) %>%
-    group_by(Date) %>%
-    summarise(!!sym(varname) := sum(!!sym(varname)))
+run_summary <- function(data, varname, country = FALSE){
+  
+  if(country == FALSE){
+    data %>%
+      select(-`Province/State`, -`Country/Region`, -Lat, -Long) %>%
+      gather(Date, !!sym(varname))%>%
+      group_by(Date) %>%
+      summarise(!!sym(varname) := sum(!!sym(varname)))
+  } else if(country == TRUE){
+    data %>%
+      select(-`Province/State`, -Lat, -Long) %>%
+      gather(Date, !!sym(varname), -`Country/Region`)%>%
+      mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+      group_by(Date, `Country/Region`) %>%
+      summarise(!!sym(varname) := sum(!!sym(varname))) -> temp_ctry_df
+    
+    temp_ctry_df %>%
+      pull(Date) %>%
+      max() -> today_date
+    
+    temp_ctry_df %>%
+      filter(Date == today_date) %>%
+      return()
+  }
 }
 
 df_confirmed %>% run_summary(varname = "Confirms") -> summary_confirmed
@@ -61,124 +80,16 @@ list(summary_confirmed,
   mutate(GrossFatalityRate = Deaths / Confirms) %>%
   mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
   arrange(Date) -> output_data
+
+```
+
+```{r child=here::here("Script", "Chunks", "ValueBoxes.Rmd")}
+```
+
+```{r child=here::here("Script", "Chunks", "ValueBoxes2.Rmd")}
 ```
 
 
-### Total Global Confirms
-
-```{r echo=FALSE}
-summary_confirmed %>%
-  summarise(Confirms = max(Confirms, na.rm = TRUE)) %>%
-  pull(Confirms) -> n_confirms
-
-n_confirms %>%
-  valueBox(caption = "Total Global Confirms",
-           icon = "fa-sort-up",
-           color = rgb2hex(222,0,0))
-```
-
-### Total Global Deaths
-
-```{r echo=FALSE}
-summary_deaths %>%
-  summarise(Deaths = max(Deaths, na.rm = TRUE)) %>%
-  pull(Deaths) -> n_deaths
-
-n_deaths %>%
-  valueBox(caption = "Total Deaths",
-           icon = "fa-sort-up",
-           color = rgb2hex(77,69,48))
-```
-
-### Gross Fatality Rate
-
-<!-- Calculated as a % of deaths over confirmed. -->
-
-```{r echo=FALSE}
-output_data %>%
-  arrange(desc(Date)) %>%
-  slice(1) %>%
-  pull(GrossFatalityRate) -> n_gfr
-
-n_gfr %>%
-  surveytoolbox::as_percent() %>%
-  valueBox(caption = "Gross Fatality rate",
-           icon = "fa-sort-up",
-           color = rgb2hex(230,82,2))
-```
-
-### Today
-
-```{r echo=FALSE}
-summary_confirmed %>%
-  pull(Date) %>%
-  max() %>%
-  lubridate::dmy() %>%
-  format("%B %d") %>%
-  valueBox(caption = "Today's Date",
-           icon = "fa-sort-up",
-           color = rgb2hex(180,180,0))
-```
-
-Column {data-width=150}
------------------------------------------------------------------------
-
-### Total Global Recovered
-
-```{r echo=FALSE}
-summary_recovered %>%
-  summarise(Recovered = max(Recovered, na.rm = TRUE)) %>%
-  pull(Recovered) -> n_recovered
-
-n_recovered %>%
-  valueBox(caption = "Total Recovered",
-           icon = "fa-sort-up",
-           color = rgb2hex(11,71,6))
-```
-
-### Total Cases with Confirmed Outcomes
-
-```{r echo=FALSE}
- 
-
-n_recovered %>%
-  c(n_deaths) %>%
-  sum() %>%
-  valueBox(caption = "Total Deaths + Recovered",
-           icon = "fa-sort-up",
-           color = rgb2hex(168,50,104))
-```
-
-
-### Net Fatality Rate
-
-<!-- Calculated as a % of deaths over _total deaths_ plus _total recovered_. -->
-
-```{r echo=FALSE}
-output_data %>%
-  arrange(desc(Date)) %>%
-  slice(1) %>%
-  pull(FatalityRate) -> n_fr
-
-n_fr %>%
-  surveytoolbox::as_percent() %>%
-  valueBox(caption = "Net Fatality rate",
-           icon = "fa-sort-up",
-           color = rgb2hex(227,166,0))
-```
-
-### New cases today
-
-```{r echo=FALSE}
-output_data %>%
-  mutate(Confirm_Lag = Confirms - lag(Confirms, 1)) %>%
-  arrange(desc(Date)) %>%
-  slice(1) %>%
-  pull(Confirm_Lag) %>%
-  valueBox(caption = "New confirms",
-           icon = "fa-sort-up",
-           color = rgb2hex(227,200,0))
-```
 
 Column {data-width=500} {.tabset}
 -----------------------------------------------------------------------
@@ -226,7 +137,11 @@ output_data %>%
               hideOnMouseOut = TRUE)
 ```
 
-### Table
+
+Fatality Rate {data-navmenu="Tables"}
+=====================================
+
+### Table - Fatality Rate
 
 ```{r echo=FALSE}
 output_data %>%
@@ -235,6 +150,47 @@ output_data %>%
   # create_dt() %>%
   # DT::formatPercentage(c("FatalityRate"), 1)
 ```
+
+Confirms {data-navmenu="Tables"}
+=====================================
+
+### Table - Confirms by Country
+
+```{r echo=FALSE}
+df_confirmed %>%
+  run_summary(varname = "Confirms", country = TRUE) %>%
+  arrange(desc(Confirms)) %>%
+  mutate(`Confirms as Global %` = surveytoolbox::as_percent(Confirms / sum(Confirms), rounding = 1)) %>%
+  knitr::kable()
+```
+
+Recovered {data-navmenu="Tables"}
+=====================================
+
+### Table - Recovered by Country
+
+```{r echo=FALSE}
+df_recovered %>%
+  run_summary(varname = "Recovered", country = TRUE) %>%
+  arrange(desc(Recovered)) %>%
+  mutate(`Recovered as Global %` = surveytoolbox::as_percent(Recovered / sum(Recovered), rounding = 1)) %>%
+  knitr::kable()
+```
+
+Deaths {data-navmenu="Tables"}
+=====================================
+
+### Table - Deaths by Country
+
+```{r echo=FALSE}
+df_deaths %>%
+  run_summary(varname = "Deaths", country = TRUE) %>%
+  arrange(desc(Deaths)) %>%
+  mutate(`Deaths as Global %` = surveytoolbox::as_percent(Deaths / sum(Deaths), rounding = 1)) %>%
+  knitr::kable()
+```
+
+
 
 Background
 =====================================
