@@ -46,8 +46,8 @@ n_gfr %>%
 ```{r echo=FALSE}
 summary_confirmed %>%
   pull(Date) %>%
-  max() %>%
   lubridate::mdy() %>%
+  max() %>%
   format("%B %d") %>%
   valueBox(caption = "Today's Date",
            icon = "fa-sort-up",
