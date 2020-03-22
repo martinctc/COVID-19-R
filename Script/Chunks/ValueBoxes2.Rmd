@@ -1,6 +1,20 @@
 Column {data-width=150}
 -----------------------------------------------------------------------
 
+### New cases today
+
+```{r echo=FALSE}
+output_data %>%
+  mutate(Confirm_Lag = Confirms - lag(Confirms, 1)) %>%
+  arrange(desc(Date)) %>%
+  slice(1) %>%
+  pull(Confirm_Lag) %>%
+  valueBox(caption = "New confirms today",
+           icon = "fa-sort-up",
+           color = rgb2hex(227,200,0))
+```
+
+
 ### Total Global Recovered
 
 ```{r echo=FALSE}
@@ -45,15 +59,3 @@ n_fr %>%
            color = rgb2hex(227,166,0))
 ```
 
-### New cases today
-
-```{r echo=FALSE}
-output_data %>%
-  mutate(Confirm_Lag = Confirms - lag(Confirms, 1)) %>%
-  arrange(desc(Date)) %>%
-  slice(1) %>%
-  pull(Confirm_Lag) %>%
-  valueBox(caption = "New confirms",
-           icon = "fa-sort-up",
-           color = rgb2hex(227,200,0))
-```

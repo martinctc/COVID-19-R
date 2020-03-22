@@ -1,3 +1,19 @@
+Column {data-width=150}
+-----------------------------------------------------------------------
+
+### Today
+
+```{r echo=FALSE}
+summary_confirmed %>%
+  pull(Date) %>%
+  lubridate::mdy() %>%
+  max() %>%
+  format("%B %d") %>%
+  valueBox(caption = "Today's Date",
+           icon = "fa-sort-up",
+           color = rgb2hex(180,180,0))
+```
+
 ### Total Global Confirms
 
 ```{r echo=FALSE}
@@ -41,15 +57,3 @@ n_gfr %>%
            color = rgb2hex(230,82,2))
 ```
 
-### Today
-
-```{r echo=FALSE}
-summary_confirmed %>%
-  pull(Date) %>%
-  lubridate::mdy() %>%
-  max() %>%
-  format("%B %d") %>%
-  valueBox(caption = "Today's Date",
-           icon = "fa-sort-up",
-           color = rgb2hex(180,180,0))
-```

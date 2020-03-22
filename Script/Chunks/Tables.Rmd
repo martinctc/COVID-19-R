@@ -1,0 +1,77 @@
+Fatality Rate {data-navmenu="Tables"}
+=====================================
+
+### Table - Fatality Rate
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(Date) %>%
+  knitr::kable()
+  # create_dt() %>%
+  # DT::formatPercentage(c("FatalityRate"), 1)
+```
+
+Confirms {data-navmenu="Tables"}
+=====================================
+
+### Table - Confirms by Country
+
+```{r echo=FALSE}
+df_confirmed %>%
+  run_summary(varname = "Confirms", country = TRUE) %>%
+  arrange(desc(Confirms)) %>%
+  mutate(`Confirms as Global %` = surveytoolbox::as_percent(Confirms / sum(Confirms), rounding = 1)) -> tb_confirmed
+
+tb_confirmed %>%
+  knitr::kable()
+```
+
+Recovered {data-navmenu="Tables"}
+=====================================
+
+### Table - Recovered by Country
+
+```{r echo=FALSE}
+df_recovered %>%
+  run_summary(varname = "Recovered", country = TRUE) %>%
+  arrange(desc(Recovered)) %>%
+  mutate(`Recovered as Global %` = surveytoolbox::as_percent(Recovered / sum(Recovered), rounding = 1)) -> tb_recovered
+
+tb_recovered %>%
+  knitr::kable()
+```
+
+Deaths {data-navmenu="Tables"}
+=====================================
+
+### Table - Deaths by Country
+
+```{r echo=FALSE}
+df_deaths %>%
+  run_summary(varname = "Deaths", country = TRUE) %>%
+  arrange(desc(Deaths)) %>%
+  mutate(`Deaths as Global %` = surveytoolbox::as_percent(Deaths / sum(Deaths), rounding = 1)) -> tb_deaths
+
+tb_deaths %>%
+  knitr::kable()
+```
+
+Summary {data-navmenu="Tables"}
+=====================================
+
+### Table - Country Summary
+
+```{r echo=FALSE}
+list(tb_confirmed,
+     tb_recovered,
+     tb_deaths) %>%
+  map(function(x){
+    x %>%
+      select(Date, `Country/Region`, contains("%")) %>%
+      mutate(id = paste0(Date, `Country/Region`))
+  }) %>%
+  reduce(full_join, by = "id") %>%
+  select(Date, `Country/Region`, contains("%")) %>%
+  knitr::kable()
+
+```
