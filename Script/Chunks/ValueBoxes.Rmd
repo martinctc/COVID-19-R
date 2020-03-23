@@ -57,3 +57,6 @@ n_gfr %>%
            color = rgb2hex(230,82,2))
 ```
 
+### Definitions
+
+_Gross Fatality Rate_ is calculated as a % of deaths over confirmed, which is equivalent to the CFR (case fatality rate).

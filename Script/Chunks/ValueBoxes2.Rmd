@@ -59,3 +59,6 @@ n_fr %>%
            color = rgb2hex(227,166,0))
 ```
 
+### Definitions
+
+_Net Fatality Rate_ is calculated as a % of deaths divided by _total deaths_ plus _total recovered_, which is a different measure to the CFR (case fatality rate).
