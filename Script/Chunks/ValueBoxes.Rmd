@@ -4,10 +4,12 @@ Column {data-width=150}
 ### Today
 
 ```{r echo=FALSE}
-summary_confirmed %>%
+output_data %>%
   pull(Date) %>%
-  lubridate::mdy() %>%
-  max() %>%
+  # lubridate::mdy() %>%
+  max() -> today_date
+
+today_date %>%
   format("%B %d") %>%
   valueBox(caption = "Today's Date",
            icon = "fa-sort-up",
@@ -17,7 +19,7 @@ summary_confirmed %>%
 ### Total Global Confirms
 
 ```{r echo=FALSE}
-summary_confirmed %>%
+output_data %>%
   summarise(Confirms = max(Confirms, na.rm = TRUE)) %>%
   pull(Confirms) -> n_confirms
 
@@ -30,7 +32,7 @@ n_confirms %>%
 ### Total Global Deaths
 
 ```{r echo=FALSE}
-summary_deaths %>%
+output_data %>%
   summarise(Deaths = max(Deaths, na.rm = TRUE)) %>%
   pull(Deaths) -> n_deaths
 

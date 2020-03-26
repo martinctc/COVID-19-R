@@ -18,7 +18,7 @@ output_data %>%
 ### Total Global Recovered
 
 ```{r echo=FALSE}
-summary_recovered %>%
+output_data %>%
   summarise(Recovered = max(Recovered, na.rm = TRUE)) %>%
   pull(Recovered) -> n_recovered
 
@@ -31,8 +31,6 @@ n_recovered %>%
 ### Total Cases with Confirmed Outcomes
 
 ```{r echo=FALSE}
- 
-
 n_recovered %>%
   c(n_deaths) %>%
   sum() %>%
@@ -49,6 +47,7 @@ n_recovered %>%
 ```{r echo=FALSE}
 output_data %>%
   arrange(desc(Date)) %>%
+  drop_na(FatalityRate) %>%
   slice(1) %>%
   pull(FatalityRate) -> n_fr
 
