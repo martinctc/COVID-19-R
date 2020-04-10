@@ -1,0 +1,83 @@
+UK {data-navmenu="Deep Dive"}
+=====================================
+
+```{r echo=FALSE}
+list(data = list(df_confirmed,
+                 df_deaths,
+                 df_recovered),
+     varname = list("Confirms",
+                    "Deaths",
+                    "Recovered"),
+     country_name = rep("United Kingdom", 3)) %>%
+  pmap(run_summary_ctry) %>%
+  reduce(full_join, by = "Date") %>%
+  mutate(N_Outcome = Deaths + Recovered) %>%
+  mutate(FatalityRate = Deaths / N_Outcome) %>%
+  mutate(GrossFatalityRate = Deaths / Confirms) %>%
+  mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+  arrange(Date) %>%
+  drop_na() -> output_data_uk
+```
+
+
+Column {data-width=500} {.tabset}
+-----------------------------------------------------------------------
+
+### Confirms, Recovers, and Deaths over time
+
+```{r echo=FALSE}
+output_data_uk %>%
+  timetk::tk_xts(select = c(Confirms, Deaths, Recovered),
+                 date_var = Date) %>%
+  dygraph(main = "Confirms, Recovers, and Deaths over time - Global") %>%
+  dyAxis("y", label = "Number of people") %>%
+  dyAxis("x", label = "Date") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```
+
+
+### Fatality Rate
+
+```{r echo=FALSE}
+output_data_uk %>%
+  timetk::tk_xts(select = c(N_Outcome, FatalityRate),
+                 date_var = Date) %>%
+  dygraph(main = "Outcomes and Fatality Rate") %>%
+  dyAxis("y", label = "Fatality Rate") %>%
+  dyAxis("y2", label = "Number of Confirmed Cases with Outcomes", independentTicks = TRUE) %>%
+  dyAxis("x", label = "Date") %>%
+  dySeries("N_Outcome", axis = "y2") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```
+
+### New vs Total Confirms
+
+```{r echo=FALSE}
+output_data_uk %>%
+  arrange(Date) %>%
+  mutate(New_cases = Confirms - lag(Confirms, 1)) %>%
+  drop_na(New_cases) %>%
+  timetk::tk_xts(select = c(Confirms, New_cases),
+                 date_var = Date) %>%
+  dygraph(main = "New vs Total Cases") %>%
+  dyAxis("y", label = "Cumulative confirms") %>%
+  dyAxis("y2", label = "New cases per day", independentTicks = TRUE) %>%
+  dyAxis("x", label = "Date") %>%
+  dySeries("New_cases", axis = "y2") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```

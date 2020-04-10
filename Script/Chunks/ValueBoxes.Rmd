@@ -4,11 +4,6 @@ Column {data-width=150}
 ### Today
 
 ```{r echo=FALSE}
-output_data %>%
-  pull(Date) %>%
-  # lubridate::mdy() %>%
-  max() -> today_date
-
 today_date %>%
   format("%B %d") %>%
   valueBox(caption = "Today's Date",
