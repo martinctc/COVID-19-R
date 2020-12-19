@@ -13,5 +13,5 @@ Other useful dashboards and resources (by others) on COVID-19 can be found below
 - [COVID-19 Timeline - Business Insider](https://www.businessinsider.com/coronavirus-pandemic-timeline-history-major-events-2020-3)
 
 ## Share this
-- [Link to this dashboard](https://raw.githack.com/martinctc/COVID-19-R/master/Script/covvirus_analysis_20200229.html)
+- [Link to this dashboard](https://raw.githack.com/martinctc/COVID-19-R/master/Script/covvirus_analysis_20201219.html)
 - [Link to the GitHub repo](https://github.com/martinctc/COVID-19-R)

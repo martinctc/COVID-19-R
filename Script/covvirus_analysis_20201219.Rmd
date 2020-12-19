@@ -1,0 +1,162 @@
+---
+title: "Minimal COVID-19 dashboard"
+author: "Martin Chan"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+<style>                     
+.navbar {
+  background-color:#363636;
+  
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#### Load packages ####
+library(tidyverse)
+library(flexdashboard)
+library(surveytoolbox)
+library(dygraphs)
+library(timetk)
+library(here)
+```
+
+Dashboard
+=====================================
+
+```{r message=FALSE, warning=FALSE, include=FALSE}  
+#### Load functions ####
+source(here("Script", "Functions", "create_dt.R"))
+source(here("Script", "Functions", "rgb2hex.R")) # Convert RGB to HEX
+source(here("Script", "Functions", "run_summary.R")) # Summary analysis functions
+
+#### Load datasets ####
+df_confirmed <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv")
+df_deaths <- read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+df_recovered <- read_csv("https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv")
+
+df_confirmed %>% run_summary(varname = "Confirms") -> summary_confirmed
+df_deaths %>% run_summary(varname = "Deaths") -> summary_deaths
+df_recovered %>% run_summary(varname = "Recovered") -> summary_recovered
+
+list(summary_confirmed,
+     summary_deaths,
+     summary_recovered) %>%
+  reduce(full_join, by = "Date") %>%
+  mutate(N_Outcome = Deaths + Recovered) %>%
+  mutate(FatalityRate = Deaths / N_Outcome) %>%
+  mutate(GrossFatalityRate = Deaths / Confirms) %>%
+  mutate_at(vars(Date), ~lubridate::mdy(.)) %>%
+  arrange(Date) %>%
+  drop_na() -> output_data
+
+## Define date to be used throughout
+output_data %>%
+  pull(Date) %>%
+  # lubridate::mdy() %>%
+  max() -> today_date
+
+```
+
+```{r child=here::here("Script", "Chunks", "ValueBoxes.Rmd")}
+```
+
+```{r child=here::here("Script", "Chunks", "ValueBoxes2.Rmd")}
+```
+
+
+
+Column {data-width=500} {.tabset}
+-----------------------------------------------------------------------
+
+### Confirms, Recovers, and Deaths over time
+
+```{r echo=FALSE}
+output_data %>%
+  timetk::tk_xts(select = c(Confirms, Deaths, Recovered),
+                 date_var = Date) %>%
+  dygraph(main = "Confirms, Recovers, and Deaths over time - Global") %>%
+  dyAxis("y", label = "Number of people") %>%
+  dyAxis("x", label = "Date") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```
+
+
+### Fatality Rate
+
+```{r echo=FALSE}
+output_data %>%
+  # ggplot(aes(x = Date, y = FatalityRate)) +
+  # geom_line()
+  timetk::tk_xts(select = c(N_Outcome, FatalityRate),
+                 date_var = Date) %>%
+  dygraph(main = "Outcomes and Fatality Rate") %>%
+  dyAxis("y", label = "Fatality Rate") %>%
+  dyAxis("y2", label = "Number of Confirmed Cases with Outcomes", independentTicks = TRUE) %>%
+  dyAxis("x", label = "Date") %>%
+  dySeries("N_Outcome", axis = "y2") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```
+
+### New vs Total Confirms
+
+```{r echo=FALSE}
+output_data %>%
+  arrange(Date) %>%
+  mutate(New_cases = Confirms - lag(Confirms, 1)) %>%
+  drop_na(New_cases) %>%
+  timetk::tk_xts(select = c(Confirms, New_cases),
+                 date_var = Date) %>%
+  dygraph(main = "New vs Total Cases") %>%
+  dyAxis("y", label = "Cumulative confirms") %>%
+  dyAxis("y2", label = "New cases per day", independentTicks = TRUE) %>%
+  dyAxis("x", label = "Date") %>%
+  dySeries("New_cases", axis = "y2") %>%
+  dyRangeSelector() %>%
+  dyOptions(colors = c(rgb2hex(65,75,170),rgb2hex(128,128,128)),
+            drawGrid = FALSE, fillGraph = TRUE) %>%
+  dyHighlight(highlightCircleSize = 5,
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = TRUE)
+```
+
+```{r child=here::here("Script", "Chunks", "DeepDive_UK.Rmd")}
+```
+
+```{r child=here::here("Script", "Chunks", "Tables.Rmd")}
+```
+
+Background
+=====================================
+
+### Background
+
+Minimal COVID-19 (novel coronavirus) dashboard built using RMarkdown and flexdashboard
+
+This is a minimal prototype to build COVID-19 dashboard using the {RMarkdown} and {flexdashboard} packages.
+
+The data used to build the analysis is taken from the data repository for the 2019 Novel Coronavirus Visual Dashboard, operated by the Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE). Their GitHub repo is linked [here](https://github.com/CSSEGISandData/COVID-19).
+
+Other useful dashboards (by others) on COVID-19 can be found below:
+
+- [Coronavirus COVID-19 Global Cases by Johns Hopkins CSSE](https://gisanddata.maps.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6)
+- [Novel Coronavirus Health Map](https://www.healthmap.org/wuhan/) 
+- [Coronavirus App](https://coronavirus.app/) 
+
+- [Link to this dashboard](https://raw.githack.com/martinctc/COVID-19-R/master/Script/covvirus_analysis_20201219.html)
+
+- [Link to the GitHub repo](https://github.com/martinctc/COVID-19-R)
